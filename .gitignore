@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+comiccraft-env/
+.venv/
+.env
+
+# Static artifacts
+static/panels/*.png
+static/panels/*.jpg
+static/exports/*.pdf
+!static/fonts/.gitkeep
+
+# IDE configuration
+.vscode/
+.idea/

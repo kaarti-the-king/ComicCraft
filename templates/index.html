@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComicCraft - Create Your Comic</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)),
+                  url('/static/background.jpg') center/cover no-repeat fixed;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    .form-container {
+      background: #ffffff;
+      max-width: 580px;
+      width: 100%;
+      border-radius: 14px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .form-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.8rem;
+    }
+    .form-header h1 {
+      font-size: 1.8rem;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #334155;
+      margin-bottom: 0.4rem;
+    }
+    input[type="text"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background-color: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #0284c7;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+      background-color: #ffffff;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .advanced-toggle {
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0.5rem 0 1.5rem 0;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: center;
+    }
+    .advanced-toggle:hover { color: #334155; }
+    
+    .advanced-settings {
+      display: none;
+      padding-top: 1rem;
+      border-top: 1px dashed #cbd5e1;
+    }
+    .advanced-settings.active { display: block; }
+
+    .submit-btn {
+      width: 100%;
+      background: #0284c7;
+      color: #ffffff;
+      padding: 0.85rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .submit-btn:hover { background: #0369a1; }
+    .submit-btn:active { transform: scale(0.99); }
+
+    .cancel-btn {
+      margin-top: 1.5rem;
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cancel-btn:hover { background: #dc2626; }
+
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      text-align: center;
+    }
+    .spinner {
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #38bdf8;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hidden div to store Python backend variables securely for JS -->
+  <div id="backend-data" data-haskey="{% if has_gemini_key %}true{% else %}false{% endif %}" style="display:none;"></div>
+
+  <div class="form-container">
+    <div class="form-header">
+      <span style="font-size: 1.6rem;">🖊️</span>
+      <h1>Create Your Comic</h1>
+    </div>
+
+    <form id="comicForm" onsubmit="submitComic(event)">
+      
+      <!-- Pipeline & .env Key Selection -->
+      <div class="form-group" style="background: #f1f5f9; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <label for="pipeline">Processing Engine:</label>
+        <select id="pipeline" name="pipeline" onchange="toggleApiKey()">
+          <option value="local" selected>Local Hardware (Llama 3.2 + SD-Turbo)</option>
+          <option value="gemini">Google Cloud (Gemini 1.5 Flash + Imagen 3)</option>
+        </select>
+        
+        <div id="api_key_container" style="display: none; margin-top: 1rem;">
+          <label for="gemini_key">Gemini API Key:</label>
+          <input type="password" id="gemini_key" name="gemini_key" placeholder="AIzaSy...">
+          
+          {% if has_gemini_key %}
+          <small style="color: #059669; font-weight: bold; display: block; margin-top: 6px;">
+            ✅ Key is already saved in your .env file. Leave blank to use it, or enter a new one to update it.
+          </small>
+          {% else %}
+          <small style="color: #64748b; display: block; margin-top: 6px;">
+            Will be saved securely to your local .env file.
+          </small>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="prompt">Story Prompt:</label>
+        <textarea id="prompt" name="prompt" required placeholder="A brave fox explores an enchanted forest.">A brave fox explores an enchanted forest.</textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="character_name">Main Character Name:</label>
+        <input type="text" id="character_name" name="character_name" required value="Free" placeholder="Enter hero or protagonist name">
+      </div>
+
+      <button type="button" class="advanced-toggle" onclick="toggleAdvanced()" id="toggleBtn">
+        ▼ Show Advanced Settings
+      </button>
+
+      <div id="advancedSettings" class="advanced-settings">
+        <div class="form-group">
+          <label for="setting">Setting:</label>
+          <select id="setting" name="setting">
+            <option value="Forest" selected>Forest</option>
+            <option value="School">School</option>
+            <option value="City">City</option>
+            <option value="Space">Space</option>
+            <option value="Cyberpunk Metropolis">Cyberpunk Metropolis</option>
+            <option value="Medieval Castle">Medieval Castle</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tone">Story Tone:</label>
+          <select id="tone" name="tone">
+            <option value="Dramatic" selected>Dramatic</option>
+            <option value="Funny">Funny</option>
+            <option value="Light-hearted">Light-hearted</option>
+            <option value="Poetic">Poetic</option>
+            <option value="Action-packed">Action-packed</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="style">Art Style:</label>
+          <select id="style" name="style">
+            <option value="Realistic" selected>Realistic</option>
+            <option value="Anime">Anime</option>
+            <option value="Comic Book">Comic Book</option>
+            <option value="Pixel Art">Pixel Art</option>
+            <option value="Vintage Cartoon">Vintage Cartoon</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="generateBtn">Generate Comic</button>
+    </form>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <h3 style="font-size: 1.3rem;">Crafting Your AI Comic...</h3>
+    <p style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.95rem;">Please wait while the pipeline processes your story.</p>
+    <button type="button" class="cancel-btn" onclick="cancelGeneration()">Stop Generation</button>
+  </div>
+
+  <script>
+    function toggleApiKey() {
+      const pipeline = document.getElementById('pipeline').value;
+      const keyContainer = document.getElementById('api_key_container');
+      const keyInput = document.getElementById('gemini_key');
+      
+      const hasKey = document.getElementById('backend-data').getAttribute('data-haskey') === 'true';
+      
+      if (pipeline === 'gemini') {
+        keyContainer.style.display = 'block';
+        if (!hasKey) {
+          keyInput.required = true;
+        }
+      } else {
+        keyContainer.style.display = 'none';
+        keyInput.required = false;
+      }
+    }
+
+    function toggleAdvanced() {
+      const adv = document.getElementById('advancedSettings');
+      const btn = document.getElementById('toggleBtn');
+      if (adv.classList.contains('active')) {
+        adv.classList.remove('active');
+        btn.innerHTML = '▼ Show Advanced Settings';
+      } else {
+        adv.classList.add('active');
+        btn.innerHTML = '▲ Hide Advanced Settings';
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('loadingOverlay').style.display = 'flex';
+      document.getElementById('generateBtn').disabled = true;
+    }
+
+    function cancelGeneration() {
+      fetch('/cancel', { method: 'POST' }).then(() => {
+          alert("Cancelling... The server will stop after the current step finishes.");
+          window.location.reload();
+      }).catch(err => alert("Error cancelling: " + err));
+    }
+
+    async function submitComic(event) {
+      event.preventDefault(); 
+      showLoading();
+
+      const form = document.getElementById('comicForm');
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('/generate', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const html = await response.text();
+          document.open();
+          document.write(html);
+          document.close();
+        } else {
+          alert("The server encountered an error. Check the terminal.");
+          window.location.reload();
+        }
+      } catch (error) {
+        alert("Connection interrupted.");
+        window.location.reload();
+      }
+    }
+
+    window.onload = function() {
+      fetch('/history')
+        .then(response => response.json())
+        .then(data => {
+            if(data.length > 0) {
+              console.log("📚 Previous Prompts:", data);
+            }
+        }).catch(err => console.log("No history found yet."));
+    }
+  </script>
+</body>
+</html>

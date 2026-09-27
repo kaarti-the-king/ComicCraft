@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComicCraft - Export Success</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+    .card {
+      background: #ffffff;
+      max-width: 580px;
+      width: 100%;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .icon-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: 1.7rem;
+      color: #15803d;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    p {
+      color: #475569;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #0284c7;
+      color: #ffffff;
+      padding: 0.8rem 1.6rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #0369a1;
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #0284c7;
+      border: 1px solid #0284c7;
+    }
+    .btn-outline:hover {
+      background: #f0f9ff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icon-wrapper">
+      <span>✅</span>
+    </div>
+    <h1>Comic Exported Successfully!</h1>
+    <p>Your AI-powered comic has been successfully created! Dive back in and bring another story to life.</p>
+
+    <div class="btn-group">
+      {% if pdf_path %}
+      <a href="{{ pdf_path }}" download class="btn btn-outline">
+        💾 Download Again
+      </a>
+      {% endif %}
+      <a href="/" class="btn">
+        🎨 Go Create Another Comic
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
